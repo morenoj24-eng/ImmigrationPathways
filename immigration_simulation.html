@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The American Dream — Immigration Decision Simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0c0e14;--card:#13161f;--card2:#191d27;--border:#252b38;
+  --amber:#e8a020;--amber-glow:rgba(232,160,32,0.12);
+  --green:#2ea84b;--red:#e53935;--blue:#4a9eff;
+  --text:#ddd8cc;--text-dim:#8e8880;--text-muted:#464040;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Crimson Text',Georgia,serif;}
+#app{min-height:100vh;background-image:radial-gradient(ellipse at 15% 15%,rgba(232,160,32,0.05) 0%,transparent 50%),radial-gradient(ellipse at 85% 85%,rgba(74,158,255,0.04) 0%,transparent 50%);}
+
+/* ======= INTRO ======= */
+#intro{max-width:940px;margin:0 auto;padding:48px 20px 60px;}
+.intro-masthead{text-align:center;margin-bottom:44px;}
+.intro-flags{font-size:36px;letter-spacing:10px;margin-bottom:18px;filter:grayscale(20%);}
+.intro-masthead h1{font-family:'Playfair Display',serif;font-size:clamp(26px,5.5vw,50px);font-weight:900;color:var(--amber);line-height:1.1;margin-bottom:6px;}
+.intro-masthead h2{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(14px,2.5vw,20px);color:var(--text-dim);margin-bottom:24px;}
+.intro-rule{width:60px;height:2px;background:var(--amber);margin:0 auto 24px;}
+.intro-lede{max-width:620px;margin:0 auto;font-size:17px;line-height:1.8;color:var(--text);border-left:3px solid var(--amber);padding-left:18px;text-align:left;}
+.intro-lede p{margin-bottom:10px;}
+.intro-lede p:last-child{margin-bottom:0;}
+.char-select-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;text-align:center;margin:40px 0 20px;}
+.char-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:36px;}
+.char-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:24px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.char-card:before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cc,var(--amber));transform:scaleX(0);transition:transform .3s;transform-origin:left;}
+.char-card:hover{border-color:var(--cc,var(--amber));transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.5);}
+.char-card:hover:before{transform:scaleX(1);}
+.cc-flag{font-size:34px;margin-bottom:10px;}
+.cc-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--cc,var(--text));margin-bottom:3px;}
+.cc-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-bottom:11px;}
+.cc-bg{font-size:14px;line-height:1.65;color:var(--text-dim);font-style:italic;margin-bottom:14px;}
+.cc-savings{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text-dim);}
+.savings-track{flex:1;height:3px;background:var(--border);border-radius:2px;}
+.savings-fill{height:100%;background:var(--cc,var(--amber));border-radius:2px;}
+.intro-disclaimer{text-align:center;font-size:13px;color:var(--text-muted);font-style:italic;max-width:580px;margin:0 auto;}
+
+/* ======= GAME ======= */
+#game{max-width:820px;margin:0 auto;padding:20px;display:none;}
+.game-topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.char-badge{display:flex;align-items:center;gap:10px;}
+.cb-flag{font-size:26px;}
+.cb-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;}
+.cb-country{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-muted);}
+.stats-bar{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto;}
+.stat-pill{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:6px 12px;text-align:center;min-width:75px;}
+.sp-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+.sp-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-top:2px;}
+.sp-val.m{color:#4caf50;}.sp-val.t{color:var(--blue);}.sp-val.sl{color:var(--green);}.sp-val.su{color:var(--red);}.sp-val.sk{color:var(--amber);}
+
+.scene{background:var(--card);border:1px solid var(--border);border-radius:3px;overflow:hidden;animation:fadeup .35s ease;}
+@keyframes fadeup{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.scene-loc{background:var(--card2);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;}
+.loc-dot{width:6px;height:6px;border-radius:50%;background:var(--cc,var(--amber));box-shadow:0 0 7px var(--cc,var(--amber));animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.5;transform:scale(1.2);}}
+.scene-title{margin-left:auto;color:var(--cc,var(--amber));font-size:11px;}
+
+.scene-body{padding:24px 24px 0;}
+.scene-body p{font-size:17px;line-height:1.82;margin-bottom:12px;}
+.scene-body p:last-child{margin-bottom:0;}
+.scene-body em{color:var(--amber);font-style:italic;}
+.scene-body strong{color:var(--text);font-weight:600;}
+
+.rc-box{margin:20px 24px 0;background:rgba(232,160,32,.06);border:1px solid rgba(232,160,32,.18);border-radius:3px;padding:16px;}
+.rc-head{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.rc-head::before{content:'◆';font-size:8px;}
+.rc-facts{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.rc-facts li{font-size:13px;color:var(--text-dim);padding-left:14px;position:relative;line-height:1.55;}
+.rc-facts li::before{content:'—';position:absolute;left:0;color:var(--text-muted);}
+
+.choices-wrap{padding:18px 24px 24px;border-top:1px solid var(--border);background:var(--card2);margin-top:20px;}
+.choices-head{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px;}
+.choices-list{display:flex;flex-direction:column;gap:9px;}
+.choice-btn{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:14px 18px;cursor:pointer;text-align:left;transition:all .22s;display:grid;grid-template-columns:28px 1fr auto;align-items:start;gap:14px;color:var(--text);font-family:'Crimson Text',serif;font-size:16px;line-height:1.55;}
+.choice-btn:hover{border-color:var(--cc,var(--amber));background:var(--amber-glow);transform:translateX(4px);}
+.choice-letter{font-family:'Space Mono',monospace;font-size:10px;color:var(--cc,var(--amber));border:1px solid var(--cc,var(--amber));border-radius:2px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.choice-tag{font-family:'Space Mono',monospace;font-size:9px;text-align:right;line-height:1.7;white-space:nowrap;}
+.tag-cost{color:#e57373;}.tag-time{color:var(--blue);}
+
+.history-log{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:14px;margin-top:14px;}
+.hl-head{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;}
+.hl-list{max-height:90px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;}
+.hl-item{font-size:13px;color:var(--text-muted);padding-left:14px;position:relative;}
+.hl-item::before{content:'→';position:absolute;left:0;color:var(--text-muted);}
+
+.btn-back{background:transparent;color:var(--text-muted);border:1px solid var(--border);padding:7px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border-radius:2px;margin-bottom:18px;transition:all .2s;}
+.btn-back:hover{color:var(--text);border-color:var(--text-dim);}
+
+/* ======= OUTCOME ======= */
+#outcome{max-width:680px;margin:0 auto;padding:50px 20px 60px;display:none;text-align:center;}
+.oc-emoji{font-size:72px;display:block;margin-bottom:14px;animation:stampin .55s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes stampin{from{transform:scale(3.5) rotate(-18deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+.oc-badge{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;padding:4px 12px;border-radius:2px;margin-bottom:14px;}
+.oc-badge.legal{background:rgba(46,168,75,.15);color:var(--green);border:1px solid rgba(46,168,75,.3);}
+.oc-badge.undoc{background:rgba(229,57,53,.15);color:var(--red);border:1px solid rgba(229,57,53,.3);}
+.oc-badge.limbo{background:rgba(232,160,32,.15);color:var(--amber);border:1px solid rgba(232,160,32,.3);}
+.oc-badge.deported{background:rgba(229,57,53,.15);color:var(--red);border:1px solid rgba(229,57,53,.3);}
+.oc-badge.left{background:rgba(74,158,255,.15);color:var(--blue);border:1px solid rgba(74,158,255,.3);}
+.oc-title{font-family:'Playfair Display',serif;font-size:clamp(22px,4.5vw,38px);font-weight:900;margin-bottom:16px;line-height:1.2;}
+.oc-narrative{font-size:17px;line-height:1.82;color:var(--text-dim);max-width:560px;margin:0 auto 24px;text-align:left;}
+.oc-stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
+.oc-stat{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:12px 18px;min-width:95px;}
+.oc-stat .lbl{font-family:'Space Mono',monospace;font-size:8px;color:var(--text-muted);letter-spacing:1px;}
+.oc-stat .val{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;margin-top:4px;}
+.oc-context{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:22px;text-align:left;margin-bottom:26px;}
+.oc-context h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:12px;}
+.oc-context p{font-size:15px;line-height:1.75;color:var(--text-dim);margin-bottom:10px;}
+.oc-context p:last-child{margin-bottom:0;}
+.oc-bigfact{border-top:1px solid var(--border);padding-top:14px;margin-top:6px;color:var(--amber) !important;font-style:italic;}
+.btn-replay{background:var(--amber);color:#000;border:none;padding:13px 28px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;margin:5px;transition:all .2s;}
+.btn-replay:hover{background:#ffc107;transform:translateY(-1px);}
+.btn-newchar{background:transparent;color:var(--amber);border:1px solid var(--amber);padding:13px 28px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;margin:5px;transition:all .2s;}
+.btn-newchar:hover{background:var(--amber-glow);}
+.oc-footer{font-size:12px;color:var(--text-muted);font-style:italic;max-width:500px;margin:24px auto 0;line-height:1.7;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="intro"></div>
+  <div id="game"></div>
+  <div id="outcome"></div>
+</div>
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const CHARS = {
+  sofia:{id:'sofia',name:'Sofia Mejía',age:32,country:'Guatemala',flag:'🇬🇹',color:'#e07b39',money:2200,
+    bg:'Single mother of two (ages 7 & 9). Her husband was murdered by MS-13 after refusing extortion payments. She now receives death threats. Her sister lives in Houston — but arrived undocumented 8 years ago and cannot legally sponsor Sofia.',
+    start:'sofia_start'},
+  arjun:{id:'arjun',name:'Arjun Sharma',age:29,country:'India',flag:'🇮🇳',color:'#4a9eff',money:11000,
+    bg:'Software engineer at a Bangalore tech firm. Just received a job offer from Seattle at $95,000/year — nearly 10× his current salary. He has a computer science degree, 5 years of experience, and a company eager to hire him.',
+    start:'arjun_start'},
+  fatima:{id:'fatima',name:'Fatima Okonkwo',age:24,country:'Nigeria',flag:'🇳🇬',color:'#a855f7',money:3800,
+    bg:'University graduate with an accounting degree from Lagos. Nigeria\'s job market is extremely limited. She has no US employer contact, no immediate US citizen family, and no significant savings beyond $3,800.',
+    start:'fatima_start'},
+  carlos:{id:'carlos',name:'Carlos Mendoza',age:28,country:'Venezuela',flag:'🇻🇪',color:'#e53935',money:4500,
+    bg:'Journalist and community organizer who documented anti-government protests in Caracas. Government agents visited his editor\'s office; two colleagues were arrested under anti-dissent laws. He received a direct warning. The US Embassy in Venezuela has been closed since 2019 — no in-country visa processing exists.',
+    start:'carlos_start'}
+};
+
+const NODES = {
+
+/* ===== SOFIA ===== */
+sofia_start:{
+  loc:'Guatemala City, Guatemala',title:'The Threat',
+  body:`<p>It is 2 AM. A note slipped under your door reads: <em>"You have one week to leave — or join your husband."</em> The local police are corrupt; MS-13 controls your neighborhood.</p>
+  <p>You have <strong>$2,200 in savings</strong>. Your children's lives depend on reaching the United States. Your sister Maria lives in Houston. She came undocumented 8 years ago and has no legal status — she cannot sponsor you through family immigration.</p>
+  <p>What do you do?</p>`,
+  rc:{title:'The Reality of Guatemalan Migration',facts:[
+    'Guatemala is a top-5 source country for US asylum seekers',
+    'Gang extortion affects an estimated 60% of small businesses in Guatemala',
+    'The US grants asylum to only ~15% of Guatemalan applicants at immigration court',
+    'Sofia\'s undocumented sister cannot sponsor her — only US citizens or green card holders can petition for family members'
+  ]},
+  choices:[
+    {txt:'Travel to the US-Mexico border and present yourself at an official port of entry to request asylum',cost:'~$180 bus fare',time:'1 week',md:-180,td:1,next:'sofia_port'},
+    {txt:'Pay a smuggler (coyote) to guide you through Mexico and across the border illegally',cost:'Need ~$9,000–$12,000',time:'3–4 weeks',md:0,td:0,next:'sofia_coyote_cost'},
+    {txt:'Apply for a B-2 tourist visa at the US Embassy in Guatemala City',cost:'$185 visa fee',time:'6 weeks processing',md:-185,td:6,next:'sofia_tourist_app'}
+  ]},
+
+sofia_port:{
+  loc:'Brownsville, TX — International Bridge',title:'The Bridge',
+  body:`<p>You and your children take buses north through Mexico — six dangerous days. At the International Bridge in Brownsville, you can see American soil fifty feet away.</p>
+  <p>Hundreds of migrants are waiting in a makeshift encampment. A CBP officer explains that the agency now uses the <em>CBP One app</em> to schedule asylum appointments. You don't have a smartphone. The next available slot is <strong>six weeks away</strong>.</p>`,
+  rc:{title:'Port of Entry Asylum — 2024 Reality',facts:[
+    'Under INA §208, any person on US soil OR at a port of entry can legally request asylum — presenting yourself is NOT a crime',
+    'The CBP One scheduling app requires a smartphone and reliable internet — a barrier for many asylum seekers',
+    '"Metering" — limiting daily asylum interviews — means waits of weeks to months at most crossings',
+    'Presenting at a port of entry is the fully legal and internationally recognized way to claim protection'
+  ]},
+  choices:[
+    {txt:'Wait in the encampment for 6 weeks until your CBP One appointment. Harsh but fully legal.',cost:'~$400 living expenses',time:'6 weeks',md:-400,td:6,next:'sofia_cf'},
+    {txt:'You cannot wait 6 weeks in dangerous conditions. Cross between ports of entry at night.',cost:'Risk of arrest',time:'1–2 days',md:-50,td:1,next:'sofia_caught'}
+  ]},
+
+sofia_cf:{
+  loc:'CBP Processing Facility',title:'Credible Fear Interview',
+  body:`<p>You are brought into a fluorescent-lit room with a CBP officer and a phone interpreter. The officer asks: <em>"Why do you fear returning to Guatemala?"</em></p>
+  <p>You explain everything — your husband's murder, the gang threats, your children's safety. This is the <strong>credible fear screening</strong> — the first gate of asylum. Pass it and you may remain in the US to file a full application. Fail and you are deported within days.</p>
+  <p>You may go through this process alone, or wait 3 months for a nonprofit legal aid attorney.</p>`,
+  rc:{title:'Asylum Legal Representation — The Numbers',facts:[
+    '~80% of applicants pass the initial credible fear screening',
+    'Asylum grant rate WITH an attorney: ~46%. WITHOUT an attorney: ~10–15%',
+    'Only 37% of immigrants in removal proceedings have any legal representation',
+    'Legal aid nonprofit capacity is far short of demand — waitlists of 3–6 months are common'
+  ]},
+  choices:[
+    {txt:'Go through the process without an attorney — you need to move quickly and cannot wait months',cost:'Free',time:'Immediate',md:0,td:0,next:'sofia_no_lawyer'},
+    {txt:'Wait 3 months for a nonprofit legal aid attorney — the odds are far better with help',cost:'Free (nonprofit)',time:'+3 months wait',md:0,td:3,next:'sofia_lawyer'}
+  ]},
+
+sofia_no_lawyer:{
+  loc:'Houston Immigration Court',title:'Standing Alone Before the Judge',
+  body:`<p>Sofia passes her credible fear interview and is released with an ankle monitor and a Notice to Appear in immigration court. She applies for a work permit — but the law requires a 150-day wait after filing before the permit can be issued. In the meantime, she cannot legally work.</p>
+  <p>Her court date arrives <strong>18 months later</strong>. She stands before the judge alone. The government has a trained attorney. She struggles to explain her case in Spanish through an interpreter. Critical legal arguments go unmade. The judge denies her asylum claim.</p>
+  <p>Sofia now has a <strong>deportation order</strong>.</p>`,
+  rc:{title:'The Immigration Court Backlog',facts:[
+    'The US immigration court backlog exceeded 3.6 million pending cases in 2024',
+    'Average wait time for an immigration hearing: 4+ years in some cities',
+    'Asylum denial rates for unrepresented immigrants are 3× higher than for those with attorneys',
+    'A final deportation order while remaining in the US is a more serious legal situation than simply being undocumented'
+  ]},
+  choices:[
+    {txt:'Ignore the deportation order. Sofia cannot send her children back into danger. She stays with her sister.',cost:'Permanent legal risk',time:'Indefinite',md:0,td:0,next:'oc_sofia_undoc_order'},
+    {txt:'Appeal the decision. A legal aid clinic helps Sofia file with the Board of Immigration Appeals.',cost:'$110 BIA filing fee',time:'+2 more years',md:-110,td:24,next:'oc_sofia_limbo'}
+  ]},
+
+sofia_lawyer:{
+  loc:'Houston Immigration Court',title:'Fighting With Help',
+  body:`<p>After 3 months, a nonprofit attorney named Carmen takes Sofia's case pro bono. She gathers police reports from Guatemala, medical records, news articles about gang violence in Sofia's neighborhood, and sworn affidavits from neighbors.</p>
+  <p>Sofia's court date arrives nearly 2 years after her entry. Carmen argues that Sofia faces persecution based on her membership in a <em>"particular social group"</em> — a recognized legal category under asylum law.</p>
+  <p>The judge deliberates for three weeks. Then comes the ruling.</p>`,
+  rc:{title:'Asylum Outcomes With Legal Representation',facts:[
+    'Guatemalan overall asylum grant rate: ~15%',
+    'With competent representation, individual grant rates can reach 40–50%',
+    '"Particular social group" (PSG) is one of 5 protected grounds for asylum — courts have inconsistently applied it to gang violence and domestic abuse',
+    'The full process from entry to final decision routinely takes 3–5 years'
+  ]},
+  choices:[
+    {txt:'The judge grants asylum — Sofia\'s evidence and Carmen\'s arguments were compelling',cost:'',time:'3 years total',md:0,td:0,next:'oc_sofia_asylum'},
+    {txt:'The judge denies. Carmen immediately files an appeal to the Board of Immigration Appeals.',cost:'$110 BIA fee',time:'+2 more years',md:-110,td:24,next:'oc_sofia_limbo'}
+  ]},
+
+sofia_caught:{
+  loc:'Rio Grande — South Texas',title:'Caught Crossing',
+  body:`<p>You hire a local guide for $200 to cross between ports of entry at night. The river is lower than expected, but the current is strong — you hold both children tightly. On the other bank, a Border Patrol flashlight is already waiting.</p>
+  <p>You are taken to a processing station. Because you immediately express fear of returning to Guatemala, you are referred for a <strong>credible fear interview</strong> — the exact same process as presenting at the official bridge. The route was different; the legal outcome so far is the same.</p>`,
+  rc:{title:'Between Ports of Entry',facts:[
+    'Crossing between official ports of entry is a federal misdemeanor under 8 U.S.C. §1325',
+    'However, crossing illegally does NOT bar someone from claiming asylum under US law',
+    '853 migrants died crossing the US-Mexico border in FY2023 — a record high',
+    'About 70% of between-ports crossers are apprehended — most are immediately processed for credible fear'
+  ]},
+  choices:[
+    {txt:'Claim asylum during processing — this is Sofia\'s best remaining option regardless of how she crossed',cost:'Free',time:'Immediate',md:0,td:0,next:'sofia_cf'}
+  ]},
+
+sofia_coyote_cost:{
+  loc:'Guatemala City, Guatemala',title:'The Price of Crossing',
+  body:`<p>You ask quietly in your neighborhood. A contact connects you with a <em>coyote</em> — a smuggler who runs groups of migrants through Mexico. His price: <strong>$9,000 per adult, $7,000 per child</strong>. For you and two children: $23,000.</p>
+  <p>You have $2,200. You would need to borrow from relatives, sell everything you own, or take loans at predatory rates of 20–30% interest.</p>`,
+  rc:{title:'Smuggling Costs & Dangers (2024)',facts:[
+    'Average smuggling fee from Central America to the US: $8,000–$15,000 per person',
+    'Many migrants take on debt to family loan-sharks or drug cartel-linked creditors',
+    'Approximately 1 in 3 women report sexual assault during the journey north',
+    'Smuggling networks are often controlled by the same cartels migrants are fleeing',
+    'Debt bondage: some smugglers hold migrants on arrival until family pays the balance'
+  ]},
+  choices:[
+    {txt:'Borrow the full amount from family and take on debt. The danger at home outweighs the danger of the road.',cost:'$20,800 borrowed',time:'3–4 weeks travel',md:-9000,td:4,next:'sofia_coyote_journey'},
+    {txt:'You cannot put your family into $20,000 of debt. Return to other options.',cost:'',time:'',md:0,td:0,next:'sofia_start'}
+  ]},
+
+sofia_coyote_journey:{
+  loc:'Mexico — 3-week overland journey',title:'The Journey North',
+  body:`<p>The guide leads your group through southern Mexico. You ride in the backs of trucks, walk for hours through jungle, sleep in cramped safe houses smelling of mold. Your 9-year-old asks every day how much longer.</p>
+  <p>Three weeks later, at night, the coyote leads the group across a shallow section of the Rio Grande near Eagle Pass. You make it. No Border Patrol in sight. The coyote disappears into the dark.</p>
+  <p>You are in America. You call your sister. She drives 3 hours to pick you up.</p>`,
+  rc:{title:'Undocumented Entry — The Reality',facts:[
+    'As of 2022, approximately 10.5–11 million undocumented immigrants live in the US',
+    'Once inside the US, undocumented immigrants typically find work in agriculture, construction, domestic services, and food processing',
+    'US employers who knowingly hire undocumented workers face fines, but enforcement is inconsistent',
+    'Undocumented immigrants pay an estimated $11.7 billion in state and local taxes annually despite being ineligible for most federal benefits'
+  ]},
+  choices:[
+    {txt:'Live with your sister. You are undocumented — but your children are safe. You will figure out next steps from here.',cost:'',time:'',md:0,td:0,next:'oc_sofia_undoc_crossed'}
+  ]},
+
+sofia_tourist_app:{
+  loc:'US Embassy, Guatemala City',title:'Tourist Visa Application',
+  body:`<p>You fill out Form DS-160 and schedule a B-2 tourist visa interview. The consular officer asks: Why do you want to visit the US? What ties do you have to Guatemala? When will you return?</p>
+  <p>You have no property, no stable formal employment, no significant bank account. You have two young children and a murdered husband. Officers look for strong ties to the home country as proof you will return. You have almost none.</p>`,
+  rc:{title:'B-2 Visa Application Realities',facts:[
+    'Guatemala B-2 visa refusal rate: approximately 35–45%',
+    'Consular officers must believe the applicant will return home — people fleeing violence often cannot credibly prove this',
+    'The $185 application fee is non-refundable even if denied',
+    '~40–50% of all undocumented immigrants in the US entered legally on tourist visas and overstayed'
+  ]},
+  choices:[
+    {txt:'Visa DENIED — the officer finds insufficient ties to Guatemala. Sofia does not appear to be a true "tourist."',cost:'$185 lost',time:'6 weeks lost',md:0,td:0,next:'sofia_tourist_denied'},
+    {txt:'Visa APPROVED (unlikely but possible) — Sofia enters the US legally as a tourist for up to 6 months.',cost:'$185 paid',time:'1 week to enter',md:0,td:1,next:'sofia_tourist_in_us'}
+  ]},
+
+sofia_tourist_denied:{
+  loc:'Guatemala City, Guatemala',title:'Denied',
+  body:`<p>The officer slides your passport back under the glass: <em>"Your visa application has been refused under Section 214(b). You have not demonstrated sufficient ties to Guatemala to ensure your timely return."</em></p>
+  <p>You are back to square one — $185 poorer. Reapplying with the same circumstances almost always leads to the same result. The threat at home has not changed.</p>`,
+  rc:{title:'After a Visa Denial',facts:[
+    'Visa denials are recorded — reapplying with the same profile rarely succeeds',
+    'There is no appeals process for nonimmigrant visa refusals',
+    'Many people denied tourist visas then turn to unauthorized crossing — the denial itself becomes a push toward undocumented migration',
+    'This dynamic illustrates why legal pathways are so limited for many who ultimately end up undocumented'
+  ]},
+  choices:[
+    {txt:'With legal options shrinking and the threat growing, seriously consider the smuggler option.',cost:'',time:'',md:0,td:0,next:'sofia_coyote_cost'},
+    {txt:'Return to all options — reconsider the port of entry path.',cost:'',time:'',md:0,td:0,next:'sofia_start'}
+  ]},
+
+sofia_tourist_in_us:{
+  loc:'Houston, Texas',title:'Six Months in America',
+  body:`<p>You enter the US legally. Your B-2 visa allows a 6-month stay. You live with your sister Maria in Houston. Your children enroll in school. You find informal cash work cleaning homes.</p>
+  <p>The six months pass faster than you expected. Your visa is about to expire. You cannot simply apply for asylum now — you entered claiming tourist intent, and the 1-year asylum filing deadline is approaching. Your visa expires in 3 days.</p>`,
+  rc:{title:'Tourist Visas and Overstays',facts:[
+    'Approximately 40–50% of all undocumented immigrants entered the US on valid visas and overstayed',
+    'Working on a B-2 tourist visa is a violation of visa terms and grounds for deportation',
+    'After 180 days of unlawful presence: leaving triggers a 3-year bar to reentry. After 365 days: a 10-year bar.',
+    'The US has no automated exit-tracking system at land borders — overstays are often never detected'
+  ]},
+  choices:[
+    {txt:'Return to Guatemala before the visa expires. Leave legally — but return to the threats.',cost:'',time:'',md:0,td:0,next:'oc_sofia_returned'},
+    {txt:'Stay in the US after the visa expires. You cannot send your children back to danger. You become undocumented.',cost:'Loss of legal status',time:'Indefinite',md:0,td:0,next:'oc_sofia_overstay'}
+  ]},
+
+/* ===== ARJUN ===== */
+arjun_start:{
+  loc:'Bangalore, India',title:'The Job Offer',
+  body:`<p>You open an email from TechVerse Inc. in Seattle: <em>"Offer Letter — Software Engineer III, $95,000/year + full benefits."</em></p>
+  <p>Your current salary: approximately $18,000/year. This offer could transform your family's future. But there is a catch: you need a US work visa, and the immigration system for skilled workers is slow, expensive, and deeply uncertain.</p>
+  <p>Your future employer is eager to sponsor you but warns: this process is complicated and the odds are not in your favor.</p>`,
+  rc:{title:'Skilled Worker Immigration to the US',facts:[
+    'The US issues only ~85,000 H-1B visas per year for specialty occupations',
+    'Indian nationals face employment green card waits estimated at 50–100+ years due to per-country caps',
+    'Over 1.5 million Indians are currently waiting in the employment-based green card backlog',
+    'Canada, Germany, and Australia process comparable skilled workers in 3–8 weeks with transparent merit-based systems'
+  ]},
+  choices:[
+    {txt:'Ask TechVerse to sponsor an H-1B visa — the standard path for skilled foreign workers',cost:'~$5,000 employer fees (you pay nothing)',time:'6–12 months',md:0,td:0,next:'arjun_h1b'},
+    {txt:'Come on an F-1 student visa, earn a US master\'s degree, then convert to H-1B through OPT',cost:'~$55,000–$80,000 in tuition',time:'2–3 years school first',md:0,td:0,next:'arjun_student'},
+    {txt:'Explore the O-1 visa for individuals with "extraordinary ability" in their field',cost:'$3,000–$5,000 in fees',time:'3–6 months',md:-1500,td:4,next:'arjun_o1'}
+  ]},
+
+arjun_h1b:{
+  loc:'Seattle, WA (application pending)',title:'The H-1B Lottery',
+  body:`<p>TechVerse files your H-1B petition in early April. The company pays $2,500 in filing fees plus $1,500 in attorney costs.</p>
+  <p>Then you wait. USCIS runs a <strong>random computer lottery</strong> to select 65,000 petitions (regular cap) + 20,000 (advanced degree exemption) from all submitted petitions. This year, over <strong>780,000 petitions</strong> were filed. Your odds: approximately <strong>1 in 9</strong>.</p>
+  <p>The lottery results arrive in late April.</p>`,
+  rc:{title:'H-1B Lottery Statistics (FY2025)',facts:[
+    '780,884 unique H-1B registrations for just 85,000 slots — the lowest selection rate ever recorded (~11%)',
+    'Each applicant gets only one registration per year',
+    'If not selected, you must wait until the following April to try again — costing another year',
+    'The H-1B lottery effectively makes US tech immigration a game of chance, not merit'
+  ]},
+  choices:[
+    {txt:'✓ SELECTED — Against the odds, your petition was chosen. 11% of applicants are selected.',cost:'',time:'+3 months processing',md:0,td:3,next:'arjun_h1b_selected'},
+    {txt:'✗ NOT SELECTED — 89% of petitioners face this. You must wait another year.',cost:'1 year of life',time:'12 months',md:0,td:12,next:'arjun_h1b_rejected'}
+  ]},
+
+arjun_h1b_selected:{
+  loc:'Seattle, WA',title:'H-1B Approved — The Long Game Begins',
+  body:`<p>You arrive in Seattle. The salary is real; the work is challenging and rewarding. You buy furniture, send money to your parents, make friends. Two years in, TechVerse files your I-140 green card petition under the EB-2 employment category. It is approved immediately.</p>
+  <p>Then the shock: the "priority date" for India-born EB-2 workers is currently stuck in <strong>2012</strong>. Your petition was filed in 2025. At current processing rates, your number will come up in approximately <strong>50–80 years</strong>.</p>`,
+  rc:{title:'The India Green Card Backlog',facts:[
+    'Employment-based green cards have a per-country cap of ~7% per year regardless of how many are in line',
+    'The Cato Institute estimates the EB-2/EB-3 backlog for Indian nationals could take 195 years to clear',
+    'H-1B workers cannot easily change employers without risking losing their place in the green card line',
+    'An estimated 300,000+ Indian H-1B workers live in this "visa limbo" today — some for 15–20+ years'
+  ]},
+  choices:[
+    {txt:'Stay in the US on H-1B, renewing every 3 years. You are legal and employed — but permanently temporary.',cost:'',time:'Indefinite',md:0,td:0,next:'oc_arjun_limbo'},
+    {txt:'Accept a job offer in Canada. Express Entry grants permanent residence in approximately 6 months.',cost:'',time:'6 months to Canadian PR',md:0,td:6,next:'oc_arjun_canada'}
+  ]},
+
+arjun_h1b_rejected:{
+  loc:'Bangalore, India',title:'Not Selected — Now What?',
+  body:`<p>No H-1B. TechVerse keeps your offer open but cannot hold it indefinitely. You are back in Bangalore for another year. Your colleague Priya, same qualifications, accepted a German company's offer. She had her residence permit in 4 weeks. She sends photos of her apartment in Munich.</p>
+  <p>You decide whether to try the lottery again or reconsider your options entirely.</p>`,
+  rc:{title:'After H-1B Rejection',facts:[
+    'Many employers wait through multiple lottery failures before giving up on a worker',
+    'Some large companies move workers to Canada or Ireland to later return on an L-1 intracompany visa',
+    'Canada\'s Express Entry, Germany\'s Skilled Worker Act, and Australia\'s General Skilled Migration all process comparable workers in weeks — not years of lottery uncertainty',
+    'H-1B lottery failures are a leading driver of skilled worker emigration to other countries'
+  ]},
+  choices:[
+    {txt:'Try the H-1B lottery again next April. One more year of waiting.',cost:'',time:'12 more months',md:0,td:12,next:'arjun_h1b_second'},
+    {txt:'Give up on the H-1B route entirely. Explore countries with faster skilled worker visas.',cost:'',time:'',md:0,td:0,next:'oc_arjun_canada'}
+  ]},
+
+arjun_h1b_second:{
+  loc:'Bangalore, India (Year 2 of Waiting)',title:'Second Lottery',
+  body:`<p>Another April. Another lottery. You have now spent 2 years waiting. Your parents ask when you are leaving. You have no answer. TechVerse is still willing to wait — but the offer can\'t stay open forever.</p>
+  <p>The USCIS results arrive.</p>`,
+  rc:{title:'The Odds of Multiple Rejections',facts:[
+    'The probability of NOT being selected in the H-1B lottery 3 years in a row: approximately 73%',
+    'The US has no "queue" system — prior rejections give no advantage in future lotteries',
+    'Some workers have tried the H-1B lottery 5–8 times without success',
+    'Brain drain: from 2018–2024, Canada, UK, and Germany all saw surges in Indian tech worker applications directly correlated with US H-1B failures'
+  ]},
+  choices:[
+    {txt:'✓ SELECTED this year — the waiting paid off. Arjun heads to Seattle.',cost:'',time:'+3 months',md:0,td:3,next:'arjun_h1b_selected'},
+    {txt:'✗ NOT SELECTED again — two years lost. TechVerse cannot hold the offer any longer.',cost:'Job offer rescinded',time:'2 years lost',md:0,td:0,next:'oc_arjun_uk'}
+  ]},
+
+arjun_student:{
+  loc:'University of Washington — Seattle',title:'The Student Path',
+  body:`<p>You apply to US universities. You are accepted into UW's Master's in Computer Science program. Tuition: $34,000/year. Living expenses: ~$22,000/year. For two years: approximately <strong>$112,000 total</strong>.</p>
+  <p>You take international student loans and use all your savings. You arrive on an F-1 visa. Two years later, you graduate with an MSCS.</p>
+  <p>Now you have <strong>Optional Practical Training (OPT)</strong> — you can work legally for up to 3 years (STEM extension). But at the end of that window, you need an H-1B or you must leave the US.</p>`,
+  rc:{title:'F-1 Student to H-1B Pipeline',facts:[
+    'F-1 graduates in STEM can work up to 3 years on OPT without changing visa status',
+    'During OPT, graduates must win the H-1B lottery — facing the same ~11% odds as everyone else',
+    'If H-1B is not obtained during OPT, the student must leave or become undocumented',
+    'International students contribute $40+ billion annually to the US economy and pay full tuition rates'
+  ]},
+  choices:[
+    {txt:'Work during OPT and apply for the H-1B lottery each year during the 3-year window.',cost:'$112,000 in loans/savings',time:'2 yrs school + 3 yrs OPT',md:-112000,td:24,next:'arjun_opt'}
+  ]},
+
+arjun_opt:{
+  loc:'Seattle, WA — Year 3 of OPT',title:'The OPT Countdown',
+  body:`<p>You have worked for 3 years on OPT. You tried the H-1B lottery twice — both times, not selected. Your STEM OPT expires in 60 days. Your employer is desperate to keep you. Your performance reviews are perfect. But they cannot do anything about the lottery.</p>
+  <p>If you do not obtain an H-1B, you are required by law to leave. The 60-day grace period is counting down.</p>`,
+  rc:{title:'OPT Expiration — A Common Crisis',facts:[
+    'When STEM OPT expires without H-1B approval, the worker has a 60-day grace period to depart or change immigration status',
+    'Many OPT workers who fail repeated lotteries return to their home countries',
+    'Some stay beyond the grace period and become undocumented — this is how many highly educated immigrants end up without status',
+    'The US trains tens of thousands of foreign workers, then cannot retain them due to the lottery system'
+  ]},
+  choices:[
+    {txt:'Return to India with a valuable US degree and 3 years of American experience. A painful but legal exit.',cost:'',time:'',md:0,td:0,next:'oc_arjun_returned'},
+    {txt:'Stay in the US beyond the OPT grace period. You invested 5 years and $112,000 — you cannot just leave.',cost:'Loss of legal status',time:'Indefinite',md:0,td:0,next:'oc_arjun_undoc'}
+  ]},
+
+arjun_o1:{
+  loc:'Bangalore / Seattle',title:'Extraordinary Ability',
+  body:`<p>The O-1 visa is for people with <em>"extraordinary ability"</em> — proven by major awards, academic publications, high salary relative to peers, media coverage, or serving as a judge in your field.</p>
+  <p>Arjun has 5 years of strong work experience but no patents, no significant awards, no publications. An immigration attorney reviews his profile honestly.</p>`,
+  rc:{title:'O-1 Visa — The Reality',facts:[
+    'O-1 requires meeting at least 3 of 8 criteria: major prizes, exclusive associations, published material, judging others\' work, critical roles, high salary, significant contributions',
+    'USCIS has dramatically increased O-1 Requests for Evidence (RFEs) for tech workers since 2020',
+    'Fewer than 15,000 O-1 visas are issued per year across all fields combined',
+    'Processing: 3–6 months standard. Premium processing (2–4 weeks): additional $2,805'
+  ]},
+  choices:[
+    {txt:'The attorney says Arjun doesn\'t clearly qualify. An O-1 application now would likely be denied.',cost:'$3,000 lost in attorney fees',time:'4 months lost',md:-3000,td:4,next:'arjun_h1b_rejected'},
+    {txt:'Arjun spends a year building his profile: tech blog, conference talks, hackathon win, press mention. Files O-1.',cost:'$4,500 in attorney fees',time:'1.5 years of work',md:-4500,td:18,next:'oc_arjun_o1'}
+  ]},
+
+/* ===== FATIMA ===== */
+fatima_start:{
+  loc:'Lagos, Nigeria',title:'No Clear Path',
+  body:`<p>You have spent weeks researching US immigration. The reality is stark: <em>there is no straightforward legal pathway</em> for a 24-year-old Nigerian with no US employer, no US citizen family member, and no university acceptance.</p>
+  <p>Unlike Canada, Germany, or Australia, the United States has <strong>no general skills-based points system</strong>. Without a specific sponsoring relationship, most people simply cannot immigrate legally — regardless of their education, ambition, or character.</p>
+  <p>Your options are limited, expensive, and uncertain.</p>`,
+  rc:{title:'Why Legal Pathways Are So Narrow',facts:[
+    'The US has no points-based immigration system — unlike Canada, Australia, Germany, or the UK',
+    'Without an employer sponsor, a US citizen/green card family member, or refugee status, most people from high-emigration countries have no accessible legal path',
+    'Nigeria is among the top 10 source countries for unauthorized immigration to the US',
+    'This structural gap — not moral failure — is the leading driver of unauthorized immigration worldwide'
+  ]},
+  choices:[
+    {txt:'Enter the Diversity Visa Lottery — a free annual program awarding 50,000 green cards to underrepresented countries',cost:'Free to enter',time:'Results in ~1 year',md:0,td:0,next:'fatima_dv'},
+    {txt:'Apply for a B-2 tourist visa — come legally for 6 months, then figure out next steps',cost:'$185 visa fee',time:'6–8 weeks',md:-185,td:8,next:'fatima_b2'},
+    {txt:'Apply to a US university as an international student — the clearest legal path, but very expensive',cost:'$50,000–$100,000 total',time:'1–2 years to enroll',md:0,td:0,next:'fatima_f1'}
+  ]},
+
+fatima_dv:{
+  loc:'Lagos, Nigeria',title:'The Diversity Visa Lottery',
+  body:`<p>The Diversity Immigrant Visa Program awards <strong>50,000 immigrant visas (green cards)</strong> per year by random lottery to people from countries with historically low immigration to the US. Nigeria qualifies. Entering is completely free.</p>
+  <p>Fatima fills out her DV entry during the October–November window. She waits until May for results.</p>
+  <p>This year, <strong>14 million people applied</strong> for those 50,000 slots.</p>`,
+  rc:{title:'Diversity Visa Lottery Facts',facts:[
+    '14+ million applicants for 50,000 slots = approximately 0.36% win rate',
+    'Nigeria, Ghana, Ethiopia, Senegal, and other African nations are among the most represented winners',
+    'Winners must still pass background checks, a medical exam, and a consular interview',
+    'The entire program costs only ~$330 in government fees if you win',
+    'Congress has periodically threatened to eliminate the DV lottery program entirely'
+  ]},
+  choices:[
+    {txt:'🎉 YOU WON — Fatima is one of 50,000 selected from 14 million. A genuine stroke of luck.',cost:'~$330 + $350 medical',time:'6–8 months to complete',md:-680,td:7,next:'fatima_dv_won'},
+    {txt:'You did not win — as 99.6% of applicants do not. Time to consider other options.',cost:'',time:'1 year passed',md:0,td:12,next:'fatima_dv_lost'}
+  ]},
+
+fatima_dv_won:{
+  loc:'US Embassy, Lagos',title:'From Lottery Win to Green Card',
+  body:`<p>The congratulations email arrives. Fatima screams. She calls her mother. She cannot believe it.</p>
+  <p>Now the real work begins. She must complete Form DS-260, gather documents (birth certificate, police clearance, school records), schedule a medical exam ($350) with a USCIS-designated physician, and attend a consular interview. All of this must be completed before <strong>September 30</strong> — the end of the fiscal year. Miss the deadline and the slot is permanently lost.</p>`,
+  rc:{title:'DV Lottery — Completing the Process',facts:[
+    'Winning the lottery does NOT guarantee the visa — only about 50,000 of ~150,000 selectees actually complete the process',
+    'The medical exam must be with a USCIS-designated physician — costs $200–$400',
+    'Previous visa violations, criminal history, or certain health conditions can disqualify winners',
+    'The fiscal year deadline (Sept 30) is absolute — no extensions, no exceptions'
+  ]},
+  choices:[
+    {txt:'Complete all steps, attend the interview, receive the immigrant visa — then fly to begin a new life.',cost:'$680 in total fees',time:'6 months',md:0,td:6,next:'oc_fatima_dv'}
+  ]},
+
+fatima_dv_lost:{
+  loc:'Lagos, Nigeria',title:'Lottery Results: Not Selected',
+  body:`<p>"Not Selected." You check the results website three times. 99.6% of applicants receive this same result.</p>
+  <p>You can enter again next year — the lottery opens every October. But it is entirely random, and this could continue indefinitely. Fatima must decide whether to keep trying or pursue other options in parallel.</p>`,
+  rc:{title:'The Lottery as a Long-Term Strategy',facts:[
+    'There is no strategy to improve DV lottery odds — it is purely random',
+    'Some people enter for 10+ years before winning (or never winning)',
+    'The DV lottery program is periodically targeted for elimination in Congress — its future is uncertain',
+    'The winning odds are similar to a moderate lottery — having a backup plan is essential'
+  ]},
+  choices:[
+    {txt:'Enter again next year AND pursue the B-2 tourist visa option now.',cost:'$185 visa fee',time:'6 weeks',md:-185,td:6,next:'fatima_b2'},
+    {txt:'Skip the lottery for now. Focus all energy on the F-1 student visa path.',cost:'',time:'',md:0,td:0,next:'fatima_f1'}
+  ]},
+
+fatima_b2:{
+  loc:'US Embassy, Lagos',title:'Tourist Visa Application',
+  body:`<p>Fatima applies for a B-2 tourist visa. She must demonstrate genuine tourist intent, sufficient funds for the visit, and strong ties to Nigeria proving she will return. The consular officer evaluates whether she is likely to overstay.</p>
+  <p>Fatima has $3,800 in savings (decent), an accounting job (helpful), but no property, no mortgage, no children. Her profile raises questions. Statistically, a meaningful percentage of Nigerians who receive B-2 visas do overstay.</p>`,
+  rc:{title:'B-2 Visa Evaluation for Nigerians',facts:[
+    'Nigerian B-2 visa refusal rate: approximately 30–40%',
+    'Officers must believe the applicant will leave — the burden of proof is entirely on the applicant',
+    'Previous travel history to Schengen countries can help establish credibility',
+    'About 42% of all undocumented immigrants in the US originally entered on legal visas and overstayed'
+  ]},
+  choices:[
+    {txt:'Visa DENIED — the officer is not convinced Fatima has sufficient ties to ensure she will leave.',cost:'$185 lost',time:'8 weeks lost',md:0,td:0,next:'fatima_b2_denied'},
+    {txt:'Visa APPROVED — Fatima enters the US legally as a tourist for up to 6 months.',cost:'$185 paid',time:'1 week to enter',md:0,td:1,next:'fatima_b2_in_us'}
+  ]},
+
+fatima_b2_denied:{
+  loc:'Lagos, Nigeria',title:'Visa Denied',
+  body:`<p><em>"Your application for a nonimmigrant visa has been refused under INA §214(b). You have not demonstrated that you have sufficient ties to your home country to overcome the presumption of immigrant intent."</em></p>
+  <p>The $185 is gone. 8 weeks wasted. Fatima is back where she started. Reapplying with the same profile typically produces the same result.</p>
+  <p>For Fatima — with no employer sponsor, no US family, no fortune — legal immigration is genuinely, structurally difficult. This is the reality that pushes many toward unauthorized routes.</p>`,
+  rc:{title:'Why Legal Pathways Fail Many People',facts:[
+    'US immigration law was largely designed in 1965 and has not been comprehensively reformed since',
+    'There is no legal pathway for most people without specific prior US connections',
+    'Countries like Canada, Germany, and Australia have systems that allow skilled workers in without those prior connections',
+    'Undocumented immigration is often not a "choice" between legal and illegal — for many, the legal option simply does not exist'
+  ]},
+  choices:[
+    {txt:'Save aggressively for the F-1 student path — the most viable legal option, but very expensive.',cost:'2–3 years of saving',time:'',md:0,td:0,next:'fatima_f1'},
+    {txt:'Look into a marriage-based path. Fatima knows a Nigerian-American named Ade who is a US citizen.',cost:'Variable',time:'Variable',md:0,td:0,next:'fatima_marriage'}
+  ]},
+
+fatima_b2_in_us:{
+  loc:'New York City, NY',title:'Six Months in New York',
+  body:`<p>Fatima lands at JFK. She has cousins in Brooklyn. New York is overwhelming and wonderful. She finds informal accounting work through the Nigerian community. She makes friends. She builds a life.</p>
+  <p>Six months pass. Her B-2 visa expires. She has built something real here — informal as it is. Nigeria hasn't changed. There is no better opportunity waiting. The expiration date has arrived.</p>`,
+  rc:{title:'The Overstay Decision',facts:[
+    'The US estimates 600,000–700,000 people overstay visas each year',
+    'Most overstays are from Canada, Mexico, India, Brazil, and Nigeria — mostly visa-holding tourists',
+    'After 180 days unlawful presence: leaving triggers a 3-year reentry bar. After 365 days: 10-year bar.',
+    'Overstaying a visa is a civil violation, not a criminal offense — unless the person was previously ordered deported'
+  ]},
+  choices:[
+    {txt:'Return to Nigeria before the visa expires. Leave legally, preserve future options.',cost:'',time:'',md:0,td:0,next:'oc_fatima_returned'},
+    {txt:'Stay in New York after the visa expires. Become undocumented. The opportunity here is real.',cost:'Loss of legal status',time:'Indefinite',md:0,td:0,next:'oc_fatima_overstay'}
+  ]},
+
+fatima_f1:{
+  loc:'Lagos, Nigeria',title:'The Student Visa Path',
+  body:`<p>The F-1 student visa is available to anyone who can: (1) gain acceptance to a US school, and (2) prove they have enough money to pay without working. For Fatima, that means showing approximately $35,000–$40,000 in a bank account.</p>
+  <p>Fatima has $3,800. She would need years of saving — or loans at 25–30% interest from Nigerian banks (US federal student loans are not available to international students).</p>`,
+  rc:{title:'F-1 Student Visa Financial Requirements',facts:[
+    'F-1 applicants must prove financial ability to cover the full first year without working',
+    'US federal student loans (FAFSA) are NOT available to international students',
+    'Full tuition at US universities: $25,000–$55,000/year for international students',
+    'Some universities offer merit scholarships to international applicants — highly competitive'
+  ]},
+  choices:[
+    {txt:'Fatima wins a prestigious scholarship covering 75% of costs. F-1 visa granted; she enrolls.',cost:'~$15,000/year out of pocket',time:'2 years school',md:-15000,td:24,next:'fatima_f1_approved'},
+    {txt:'Without a scholarship, Fatima cannot demonstrate sufficient funds. Visa application denied.',cost:'$185 lost',time:'8 weeks',md:-185,td:8,next:'fatima_f1_denied'}
+  ]},
+
+fatima_f1_approved:{
+  loc:'Midwest University',title:'Degree → OPT → Now What?',
+  body:`<p>Fatima earns her graduate degree in accounting. She is brilliant; her professors are impressed. She receives STEM OPT authorization and works for an accounting firm. Eighteen months in, she applies for the H-1B lottery. Not selected. She applies again the following year. Not selected again.</p>
+  <p>Her OPT expires in 6 months. She has no H-1B and no alternative work authorization. The same lottery problem that affects Arjun now affects Fatima.</p>`,
+  rc:{title:'The OPT to H-1B Funnel',facts:[
+    'F-1 graduates on STEM OPT can attempt the H-1B lottery up to 3 times during their 3-year window',
+    'If unsuccessful, they must leave the US or change to another lawful status',
+    'Many employers lose talented foreign graduates at exactly this stage despite wishing to keep them',
+    'Fatima\'s path illustrates that the H-1B barrier affects workers regardless of origin or pathway in'
+  ]},
+  choices:[
+    {txt:'Return to Nigeria with a US graduate degree — a legal exit and strong career prospects abroad.',cost:'',time:'',md:0,td:0,next:'oc_fatima_returned_degree'},
+    {txt:'Stay beyond OPT. You invested everything here and cannot bring yourself to leave.',cost:'Loss of legal status',time:'Indefinite',md:0,td:0,next:'oc_fatima_overstay'}
+  ]},
+
+fatima_f1_denied:{
+  loc:'Lagos, Nigeria',title:'F-1 Denied — Out of Options',
+  body:`<p>Without funds or a scholarship, the F-1 application fails. The DV lottery is random. The B-2 was denied. There is no employer sponsor. There is no US citizen family member.</p>
+  <p>For Fatima, as for millions of people worldwide, there simply is no accessible legal path to the United States.</p>`,
+  rc:{title:'The Structural Gap in US Immigration',facts:[
+    'The US admits roughly 1 million green card holders per year, but 4+ million people are on waiting lists at any given time',
+    'There is no legal pathway for workers without family, employer, or refugee connections',
+    'This structural gap — not individual failure — drives most unauthorized immigration',
+    'Immigration reform proposals have stalled repeatedly in Congress for over 20 years'
+  ]},
+  choices:[
+    {txt:'Return to the beginning. Explore all options with this new understanding of the system.',cost:'',time:'',md:0,td:0,next:'fatima_start'}
+  ]},
+
+fatima_marriage:{
+  loc:'Lagos / Newark, NJ',title:'Marriage-Based Immigration',
+  body:`<p>Marriage to a US citizen is the fastest and most accessible path to a green card. Fatima has been in contact with Ade, a Nigerian-American US citizen living in Newark, who is willing to help her.</p>
+  <p>This path has two very different versions: a genuine relationship, or a marriage of convenience — which is federal fraud. USCIS takes immigration marriage fraud extremely seriously.</p>`,
+  rc:{title:'Marriage-Based Immigration Facts',facts:[
+    'Marriage to a US citizen: green card process takes approximately 12–18 months, no quota backlog',
+    'K-1 fiancé visa: get to the US in 6–8 months, marry within 90 days, then adjust status',
+    'USCIS conducts fraud interviews, home visits, and social media surveillance',
+    'Marriage fraud: up to 5 years federal prison and $250,000 fine for both parties',
+    '~35% of all US green cards go to spouses of US citizens — it is by far the most common pathway'
+  ]},
+  choices:[
+    {txt:'Genuine relationship: Fatima and Ade apply for the K-1 fiancé visa together.',cost:'$535 + $325 fees',time:'10–12 months',md:-860,td:10,next:'oc_fatima_marriage_gc'},
+    {txt:'Marriage of convenience: both understand the legal risk they are accepting.',cost:'$860 + legal risk',time:'10–12 months',md:-860,td:12,next:'fatima_fraud'}
+  ]},
+
+fatima_fraud:{
+  loc:'USCIS Interview Office, Newark, NJ',title:'The Fraud Interview',
+  body:`<p>At the USCIS Stokes interview, officers separate Fatima and Ade and ask them simultaneously about their relationship: What side of the bed does your partner sleep on? What did you eat for dinner on Sunday? Describe your last disagreement. Where did you go on your first date?</p>
+  <p>Their answers don't match on several key details. The officer has seen this pattern many times. She is not fooled.</p>`,
+  rc:{title:'Marriage Fraud Consequences',facts:[
+    'USCIS denied 17,000+ marriage-based petitions in 2022 for fraud or misrepresentation',
+    'A finding of marriage fraud results in a permanent bar from the United States for the foreign national',
+    'The US citizen petitioner can face federal criminal charges under 8 U.S.C. §1325(c)',
+    'USCIS Stokes interviews, unannounced home visits, and social media reviews are standard fraud detection tools'
+  ]},
+  choices:[
+    {txt:'Inconsistencies are flagged. The petition is denied and referred for fraud investigation.',cost:'Potential criminal charges for both',time:'',md:0,td:0,next:'oc_fatima_fraud_denied'}
+  ]},
+
+/* ===== OUTCOMES ===== */
+oc_sofia_asylum:{isOutcome:true,type:'legal',emoji:'🛡️',status:'Lawful Permanent Resident (Asylee)',title:'Asylum Granted',
+  narrative:'Sofia and her children receive asylum. They are authorized to live and work in the United States permanently. After one year with asylee status, Sofia can apply for a green card. After five years as a green card holder, she can apply for US citizenship.',
+  context:'Winning asylum after fleeing gang violence is rare but achievable. The legal representation was the decisive factor. Sofia\'s case took nearly 3 years from first entry to final decision. Her children can now attend school without fear, and Sofia can work legally and build a stable life without the constant threat of deportation.',
+  bigfact:'Only about 15% of Guatemalan asylum applicants receive asylum at the immigration court level. Sofia\'s outcome — while genuinely possible — required legal help, strong evidence, and significant perseverance through years of uncertainty.'},
+
+oc_sofia_limbo:{isOutcome:true,type:'limbo',emoji:'⏳',status:'Pending Asylum Appeal',title:'Legal Limbo',
+  narrative:'Sofia\'s case was denied but is now under appeal with the Board of Immigration Appeals. She remains in the US legally while the appeal is pending — which could take another 2–4 years. She has a work permit. But her future is deeply uncertain.',
+  context:'Millions of immigrants live in this gray zone — technically legal today, potentially deportable tomorrow. Sofia can work, her children attend school, and she builds a community. But the threat of removal overshadows every aspect of family life. This is not safety — it is supervised uncertainty with an unknown expiration date.',
+  bigfact:'The Board of Immigration Appeals has a backlog exceeding 60,000 cases. Asylum cases can remain unresolved for 5–10+ years from first arrival to final determination.'},
+
+oc_sofia_undoc_order:{isOutcome:true,type:'undoc',emoji:'⚠️',status:'Undocumented — Final Order of Removal',title:'Undocumented With Deportation Order',
+  narrative:'Sofia ignored her deportation order and remains in Houston with her sister. She works cleaning homes for cash. Her children attend school. She does not drive. She avoids hospitals. Every knock at the door causes anxiety. Every year, she hopes for an amnesty that may never come.',
+  context:'Having a final removal order while remaining in the US is the most legally precarious form of undocumented status. ICE can detain and deport Sofia at any time without a new court hearing. This situation makes her ineligible for most future immigration benefits and creates a near-permanent bar to legal status.',
+  bigfact:'An estimated 1.3 million people in the US have final removal orders but remain in the country. Many have US-born citizen children, deep community ties, or face genuine danger in their countries of origin.'},
+
+oc_sofia_undoc_crossed:{isOutcome:true,type:'undoc',emoji:'🌉',status:'Undocumented — Unauthorized Entry',title:'Undocumented — Crossed the Border',
+  narrative:'Sofia and her children arrive safely in Houston. She moves in with Maria. She finds work cleaning offices for $12/hour cash. Her children start school — US law guarantees public education to all children regardless of immigration status. She pays rent, buys groceries, contributes to her community.',
+  context:'Sofia is now among an estimated 10.5 million undocumented immigrants in the US. She cannot obtain a driver\'s license in most states, cannot access federal benefits, and lives with constant fear of arrest and deportation back to the country where her husband was murdered. She is simultaneously invisible and essential.',
+  bigfact:'Undocumented immigrants pay an estimated $11.7 billion in state and local taxes annually. They are ineligible for federal welfare, Medicaid (except emergency care), Social Security, or food stamps — they pay in but cannot collect.'},
+
+oc_sofia_overstay:{isOutcome:true,type:'undoc',emoji:'📅',status:'Undocumented — Visa Overstay',title:'Undocumented — Visa Overstay',
+  narrative:'Sofia\'s B-2 visa expires. She stays. She entered legally, was processed at the airport, crossed no border illegally — and became undocumented simply by not leaving on time. She builds her life, works informally, her children thrive in school.',
+  context:'Overstaying a visa is the single most common way to become undocumented in the US. Sofia entered with full documentation, had her passport stamped at customs, and traveled through an airport. The line between legal and undocumented was a single date printed on a piece of paper.',
+  bigfact:'Approximately 40–50% of all undocumented immigrants in the US entered legally on valid visas. The widely held image of unauthorized immigrants wading across rivers applies to fewer than half of the undocumented population.'},
+
+oc_sofia_returned:{isOutcome:true,type:'left',emoji:'✈️',status:'Returned to Guatemala',title:'Returned Home — Legally',
+  narrative:'Sofia returns to Guatemala before her visa expires. She leaves legally. Her US record is clean. Future visa applications remain possible. But the gang threats are still there. Her children return to the neighborhood where their father was murdered. Nothing has changed.',
+  context:'Returning legally preserves future options but does not solve the underlying problem that drove migration in the first place. The danger that prompted the journey is the same danger Sofia returns to. Many people who return legally attempt the journey again within months.',
+  bigfact:'The US returned over 240,000 Guatemalans in 2022. According to DHS data, a significant portion attempt to return within 6 months of removal or voluntary departure.'},
+
+oc_arjun_limbo:{isOutcome:true,type:'limbo',emoji:'🔗',status:'H-1B Worker — Green Card Backlog: 80+ Years',title:'Legal But Permanently Temporary',
+  narrative:'Arjun is legally employed in Seattle, earning $110,000/year after two promotions. He is a top performer. His employer wants to keep him indefinitely. But his green card priority date will not be reached for approximately 50–80 years at current processing rates.',
+  context:'Arjun cannot easily change employers without risking his green card position. He cannot start his own company on H-1B. He cannot take extended leave. His entire professional life is controlled by his employer\'s willingness to keep sponsoring him. Immigration attorneys call this "golden handcuffs" — or less charitably, a form of indentured servitude.',
+  bigfact:'An estimated 1.5 million Indian nationals are stuck in the employment-based green card backlog. Some have been waiting 15–20 years. Their US-born children who "age out" at 21 lose their place in line and must start over, often as undocumented young adults.'},
+
+oc_arjun_canada:{isOutcome:true,type:'left',emoji:'🍁',status:'Canadian Permanent Resident',title:'Chose Canada',
+  narrative:'Arjun accepts a job in Toronto. Canada\'s Express Entry system scores him above the cutoff. Within five months, he has Canadian permanent residence. After three years, he can apply for citizenship.',
+  context:'The US lost a highly skilled worker — due entirely to an immigration lottery, not any failing on Arjun\'s part. Canada, which operates a points-based merit system, gained a taxpayer, innovator, and eventual citizen. This is what economists call the "brain drain" — and it happens to thousands of workers per year.',
+  bigfact:'Canada admitted 437,000 new permanent residents in 2022 — more per capita than any other major nation. Germany\'s Skilled Worker Act, UK\'s Global Talent visa, and Australia\'s General Skilled Migration all process comparable applicants in weeks with transparent criteria.'},
+
+oc_arjun_uk:{isOutcome:true,type:'left',emoji:'🇬🇧',status:'UK Skilled Worker Visa',title:'Chose the United Kingdom',
+  narrative:'After two failed H-1B lotteries and a rescinded US job offer, Arjun accepts a position at a London fintech firm. The UK Skilled Worker visa is processed in 3 weeks. After 5 years, he can apply for Indefinite Leave to Remain (permanent residence).',
+  context:'The UK, Germany, Canada, and Australia have each designed their systems to actively attract exactly the kind of worker the US H-1B lottery turns away. Every lottery failure is a potential defection to a competing economy.',
+  bigfact:'From 2019 to 2023, the UK and Canada both saw surges in Indian tech worker applications that directly tracked spikes in US H-1B rejection numbers. The US immigration lottery is effectively recruiting workers for its economic competitors.'},
+
+oc_arjun_returned:{isOutcome:true,type:'left',emoji:'🇮🇳',status:'Returned to India — US Degree in Hand',title:'Returned to India',
+  narrative:'Arjun returns to India with an American master\'s degree and 3 years of US work experience. A major Indian tech company recruits him as a senior engineer. He earns more than before — but far less than he would have in Seattle.',
+  context:'India\'s tech sector benefits from this returnee pipeline — engineers with US training bring back skills, global networks, and capital. But from the US perspective, the country educated Arjun (or watched him educate himself), welcomed him for 3 years, and then failed to retain him because of a lottery.',
+  bigfact:'India is home to over 1,500 tech startups founded by H-1B workers or US-educated Indians who couldn\'t obtain permanent residence — representing $60+ billion in economic activity that could have been based in the United States.'},
+
+oc_arjun_undoc:{isOutcome:true,type:'undoc',emoji:'💻',status:'Undocumented — Overstay',title:'Undocumented Software Engineer',
+  narrative:'Arjun overstays his OPT. His employer continues paying him without closely examining his work authorization status. He has no legal status but blends in completely. He pays taxes using an ITIN number. He cannot travel internationally, cannot renew his driver\'s license in most states, cannot get a bank loan.',
+  context:'Highly educated undocumented immigrants exist in significant numbers, particularly in the tech sector. Arjun\'s unauthorized status is not a reflection of his abilities or character — it is the direct consequence of a system that could not retain him through legal channels.',
+  bigfact:'Estimates suggest 10–15% of undocumented immigrants have college or advanced degrees. Some research suggests the undocumented population contains a higher proportion of college graduates than the US-born population — a result of the same legal barriers that failed Arjun.'},
+
+oc_arjun_o1:{isOutcome:true,type:'legal',emoji:'⭐',status:'O-1 Visa — Extraordinary Ability',title:'O-1 Visa Approved',
+  narrative:'After 18 months of deliberate profile-building — speaking at conferences, publishing technical articles, winning a recognized hackathon, being quoted in TechCrunch — Arjun\'s O-1 application is approved. He arrives in Seattle. The O-1 can be renewed indefinitely, and his EB-1 green card path is now viable.',
+  context:'The O-1 pathway is real but requires exceptional effort that most qualified workers should not need to perform simply to justify their immigration status. It effectively requires immigrants to perform a years-long legal and professional circus to prove extraordinary worth beyond simply being excellent engineers.',
+  bigfact:'Approximately 13,000 O-1 visas are issued annually across all fields. The O-1 approval rate for tech workers has declined significantly since 2020 as USCIS has increased the issuance of Requests for Evidence (RFEs) requiring extensive documentation.'},
+
+oc_fatima_dv:{isOutcome:true,type:'legal',emoji:'🎰',status:'Lawful Permanent Resident — Diversity Visa',title:'Diversity Visa Green Card',
+  narrative:'Fatima lands at JFK with an immigrant visa stamp and receives her green card by mail two weeks later. She can live and work anywhere in the US, sponsor eligible family members, and apply for citizenship after five years.',
+  context:'Fatima\'s entire path was legal, by the book, and transparent. But it depended entirely on a 0.36% lottery win. The 99.6% of equally qualified, equally deserving applicants who did not win face the same limited options Fatima faced before her lucky draw. The legal system did not fail her — it is simply not designed to let most people in.',
+  bigfact:'The DV lottery is the only US immigration pathway requiring zero prior US connections — no family sponsor, no employer, no prior visa. It is also the program most frequently targeted for elimination in Congress, despite representing only ~5% of annual green cards.'},
+
+oc_fatima_returned:{isOutcome:true,type:'left',emoji:'✈️',status:'Returned to Nigeria',title:'Returned to Nigeria — Legally',
+  narrative:'Fatima returns to Lagos before her visa expires. Her legal record is clean. She may apply for a B-2 again, try the DV lottery each year, or find a different path. For now, she is back where she started.',
+  context:'Returning legally is the "correct" choice in terms of preserving future options. But for someone with no clear legal pathway and genuine aspirations, returning legally means returning to the same limited circumstances that made immigration seem necessary in the first place.',
+  bigfact:'Nigeria has one of the world\'s largest diasporas — over 1.7 million Nigerians live in the US. The overwhelming majority arrived through family sponsorship or employment connections that Fatima doesn\'t have access to.'},
+
+oc_fatima_returned_degree:{isOutcome:true,type:'left',emoji:'🎓',status:'Returned to Nigeria — US Graduate',title:'Home With a US Degree',
+  narrative:'Fatima returns to Nigeria with a US graduate degree and three years of American work experience. She is recruited by a major Nigerian bank at triple her previous salary. She is among the most employable people in Lagos.',
+  context:'Not all immigration stories end in America. For some, the US degree and experience becomes the foundation of a successful career at home — what economists call "circular migration." But Fatima spent $108,000 on education, and the US educated her only to lose the economic benefit of her skills.',
+  bigfact:'Over 100,000 international students leave the US each year after completing degrees without finding a path to legal long-term status. This represents the largest per-year export of trained human capital in the world — a product of the H-1B lottery barrier.'},
+
+oc_fatima_overstay:{isOutcome:true,type:'undoc',emoji:'📆',status:'Undocumented — Visa Overstay',title:'Undocumented — Overstay',
+  narrative:'Fatima stays in New York after her visa expires. She finds steady accounting work for cash in immigrant-owned businesses. She sends money to her parents, builds a community, pursues a life. But she cannot travel internationally, cannot get a professional license, and lives with constant background anxiety.',
+  context:'Fatima\'s story is statistically typical of undocumented immigrants. She arrived through legal channels, overstayed when no viable legal path forward existed, and contributes to the American economy in an invisible way. She is not a criminal — she is a person who made the only choice available to her.',
+  bigfact:'Over 600,000 people overstay US visas each year. The government estimates 40–50% of the entire undocumented population are visa overstays. Their stories begin at airports with valid passports, not rivers crossed at midnight.'},
+
+oc_fatima_marriage_gc:{isOutcome:true,type:'legal',emoji:'💍',status:'Lawful Permanent Resident — via Marriage',title:'Green Card Through Marriage',
+  narrative:'Fatima and Ade marry. USCIS approves her adjustment of status. She receives a conditional 2-year green card. After two years, they file to remove conditions. She is on her way to citizenship.',
+  context:'Marriage to a US citizen is by far the most accessible immigration pathway for most people — processing is relatively fast and there is no lottery or quota. This is why family-based immigration dominates the US system: it is the only reliable path for the vast majority of people who want to come legally.',
+  bigfact:'About 35% of all green cards issued in the US go to spouses of US citizens. In FY2022, over 300,000 people received green cards through marriage — more than through all employment-based categories combined.'},
+
+oc_fatima_fraud_denied:{isOutcome:true,type:'deported',emoji:'🚫',status:'Inadmissible — Permanent Fraud Bar',title:'Marriage Fraud Detected',
+  narrative:'The USCIS officer finds inconsistencies. The petition is denied with a finding of willful misrepresentation. Fatima is permanently barred from the United States under INA §212(a)(6)(C). Ade faces potential criminal charges under 8 U.S.C. §1325(c).',
+  context:'Immigration fraud carries the harshest long-term consequences in immigration law — worse in many cases than criminal bars. A permanent inadmissibility finding closes virtually every future US immigration pathway forever, and may expose both parties to federal prosecution.',
+  bigfact:'USCIS and ICE investigate thousands of marriage fraud cases annually. The permanent bar for fraud findings is one of the most severe provisions in immigration law — and unlike most criminal bars, there is no waiver available for willful misrepresentation in a marriage context.'},
+
+/* ===== CARLOS ===== */
+carlos_start:{
+  loc:'Caracas, Venezuela',title:'The Warning',
+  body:`<p>It is 6 AM. Two men in unmarked vehicles have been outside your building for three days. Your editor calls: <em>"They came again. Marcos was taken last night. You need to leave — now."</em></p>
+  <p>Venezuela's SEBIN intelligence service has a documented pattern of arresting journalists and activists. You have the footage. You have the sources. <strong>You have $4,500</strong> and a cousin in Miami who is a legal permanent resident. But the US Embassy in Caracas closed in 2019 — there is no way to apply for a US visa from inside Venezuela.</p>
+  <p>You have 24 hours.</p>`,
+  rc:{title:'Venezuela\'s Displacement Crisis',facts:[
+    '7.7 million Venezuelans have fled since 2015 — the largest displacement crisis in Western Hemisphere history',
+    'The US Embassy in Venezuela suspended all consular operations in March 2019 — no visa applications are processed in-country',
+    'The Maduro government has detained 1,000+ journalists and activists since 2013 (UNHCR documentation)',
+    'Venezuela is one of the few countries whose nationals qualify for Temporary Protected Status (TPS) in the United States — active since 2021'
+  ]},
+  choices:[
+    {txt:'Fly to Mexico and join the CBP One app queue for a legal asylum appointment at the US-Mexico border',cost:'~$600 flight',time:'2–3 days travel',md:-600,td:1,next:'carlos_mexico'},
+    {txt:'Take the Darién Gap route — overland through Colombia, the jungle, Panama, and Central America to the US border',cost:'$800–$2,000 in guides/transit',time:'5–8 weeks of dangerous travel',md:0,td:0,next:'carlos_darien'},
+    {txt:'Research the CHNV Humanitarian Parole program — a US program allowing legal entry with a financial sponsor',cost:'Free to research',time:'1–2 days',md:0,td:1,next:'carlos_parole'}
+  ]},
+
+carlos_parole:{
+  loc:'Caracas, Venezuela — online research',title:'CHNV Parole: Gone',
+  body:`<p>You find it: the CHNV program. A Biden-era initiative that allowed nationals of Cuba, Haiti, Nicaragua, and Venezuela to fly legally to the United States for up to two years — provided they had a US financial sponsor. At its peak, it was processing <em>1,200 Venezuelan arrivals per day</em>, at airports, with full documentation.</p>
+  <p>Then you see the date. <em>January 20, 2025. Executive order. Program terminated.</em></p>
+  <p>Approximately 530,000 people already in the US under CHNV suddenly faced uncertain status. New applications were immediately suspended. The legal door that was open last year is now closed. You must find another way.</p>`,
+  rc:{title:'CHNV Parole — Rise and Termination',facts:[
+    'The CHNV program (2022–2025) allowed up to 30,000 Venezuelans per month to enter the US legally via direct flight with a financial sponsor',
+    'At its peak, CHNV was the single largest source of legal Venezuelan entries — processing ~1,200 arrivals per day at US airports',
+    'In January 2025, the program was terminated by executive order; all pending applications were cancelled',
+    'CHNV illustrated how immigration policy — not just law — shapes who enters: a program legally admitting thousands was eliminated overnight by a single executive action'
+  ]},
+  choices:[
+    {txt:'The parole program is gone. Fly to Mexico and use the CBP One asylum process.',cost:'~$600 flight',time:'2–3 days',md:-600,td:1,next:'carlos_mexico'},
+    {txt:'The parole program is gone. Take the Darién Gap overland route.',cost:'$800–$2,000',time:'5–8 weeks',md:0,td:0,next:'carlos_darien'}
+  ]},
+
+carlos_mexico:{
+  loc:'Tijuana, Mexico — US-Mexico Border',title:'The CBP One Queue',
+  body:`<p>You fly to Mexico City and travel by bus to Tijuana. At the San Ysidro crossing — the busiest land border in the world — you download the CBP One app. It is the US government's official system for scheduling asylum appointments. Legal. Internationally recognized. By the book.</p>
+  <p>The next available appointment: <strong>nine weeks away</strong>. You have $3,900 left. You are in Tijuana, your Venezuelan passport could flag you with authorities, and you're sleeping in a migrant shelter for $8/night. You register your appointment and wait.</p>`,
+  rc:{title:'CBP One — Asylum at Ports of Entry',facts:[
+    'CBP One replaced informal "metering" in 2023, creating a smartphone-based appointment system for asylum seekers',
+    'At peak demand, 40,000+ users competed for roughly 740 daily appointment slots across all US ports of entry',
+    'Presenting at a port of entry is explicitly protected under US law (INA §208) and the 1951 Refugee Convention — it is never a crime',
+    'CBP One requires a working smartphone, reliable internet, and an acceptable photo — barriers for many asylum seekers'
+  ]},
+  choices:[
+    {txt:'Wait 9 weeks in Tijuana for your legal appointment. Expensive and tense, but entirely lawful.',cost:'~$500 shelter/food',time:'9 weeks',md:-500,td:9,next:'carlos_cf_venezuela'},
+    {txt:'Nine weeks is too long — your identity may be flagged. Cross between ports of entry at night.',cost:'Risk of expedited removal',time:'1–2 days',md:-200,td:1,next:'carlos_irregular'}
+  ]},
+
+carlos_cf_venezuela:{
+  loc:'CBP Processing Facility — San Diego, CA',title:'Credible Fear — Political Persecution',
+  body:`<p>You tell the CBP officer: <em>"I am seeking asylum."</em> You are taken to a room. Hours later, across a table from an asylum officer and a phone interpreter, you describe everything — the surveillance, your colleagues' arrests, the SEBIN agents, your journalism work, the direct threat to your editor.</p>
+  <p>Political opinion is one of the five protected grounds under US asylum law. Unlike gang violence — which courts have struggled to classify as persecution — documented government targeting of a journalist is a legally strong claim. You pass credible fear screening.</p>
+  <p>Released with a Notice to Appear. Court date: <strong>16 months away</strong>. Attorney or no attorney?</p>`,
+  rc:{title:'Venezuelan Asylum — The Legal Landscape',facts:[
+    'Venezuelan asylum applicants receive approval at approximately 30–40% — more than double the ~15% rate for Guatemalan applicants',
+    'Political opinion claims (journalism, activism, dissent) are among the legally strongest asylum grounds — aligned with the original purpose of refugee law',
+    'Venezuela\'s Maduro government is recognized by UNHCR and multiple US courts as committing systematic human rights violations',
+    'TPS (Temporary Protected Status) provides Venezuelans an alternative legal status — work authorization and deportation protection, but no path to a green card'
+  ]},
+  choices:[
+    {txt:'Proceed without an attorney. You cannot wait longer — you want to move the case forward.',cost:'Free',time:'Immediate',md:0,td:0,next:'carlos_no_lawyer_pol'},
+    {txt:'Wait 2–3 months for a nonprofit immigration attorney. Your case is strong — legal help matters.',cost:'Free (nonprofit)',time:'+2 months',md:0,td:2,next:'carlos_lawyer_pol'}
+  ]},
+
+carlos_no_lawyer_pol:{
+  loc:'Los Angeles Immigration Court',title:'Standing Alone Before the Judge',
+  body:`<p>You represent yourself. You've assembled evidence — your published articles, records of your colleagues' arrests, a statement from a Venezuelan human rights organization. But you don't know how to structure the legal argument. The judge asks: <em>"Can you demonstrate the Venezuelan government targeted you specifically for your political opinion — and not simply that you were present at events?"</em></p>
+  <p>You can't answer the way the law requires. The "government nexus" — the legal standard requiring proof that persecution was on account of a protected ground — goes unmade. After <strong>16 months</strong> of waiting, your asylum claim is <strong>denied</strong>. Your attorney, who you never had, might have made the difference.</p>`,
+  rc:{title:'Why Self-Representation Fails — Even in Strong Cases',facts:[
+    'The "government nexus" standard requires proving the government persecuted you specifically for a protected reason — not just that it persecuted people generally',
+    'This distinction is often the decisive legal issue in political persecution cases — and is extremely difficult to argue without an attorney',
+    'Venezuelan applicants without attorneys are denied at roughly 3× the rate of represented applicants',
+    'TPS is separately available for Venezuelans as a backup status — but without an attorney, Carlos may not know to apply for it'
+  ]},
+  choices:[
+    {txt:'File a Board of Immigration Appeals appeal and apply for TPS as backup. Stay and fight.',cost:'~$500 in fees',time:'+2 more years',md:-500,td:24,next:'oc_carlos_limbo'},
+    {txt:'Comply with the deportation order. Return to Venezuela. Preserve the right to reapply someday.',cost:'',time:'',md:0,td:0,next:'oc_carlos_deported_order'}
+  ]},
+
+carlos_lawyer_pol:{
+  loc:'Los Angeles — Nonprofit Refugee Legal Aid',title:'With an Attorney',
+  body:`<p>An immigration attorney at a refugee legal aid nonprofit reviews your case. <em>"This is a strong case,"</em> she says. <em>"You have named officials, documented surveillance, corroborating human rights reports, and your journalism work creates a direct political nexus. I'll also file for TPS as a backup while asylum is pending."</em></p>
+  <p>She prepares a thorough brief. At the hearing, she makes the government nexus argument clearly — connecting your journalism to SEBIN's documented targeting of journalists under Venezuela's 2017 anti-hate law. The judge is familiar with Venezuelan political asylum cases. After <strong>18 months</strong>, the decision arrives.</p>`,
+  rc:{title:'Representation in Venezuelan Asylum Cases',facts:[
+    'Represented Venezuelan applicants receive asylum at an estimated 50–60% rate vs. 20–25% for unrepresented applicants',
+    'Venezuela\'s Constituent Decree No. 3 (2017 "anti-hate" law) is specifically cited in US asylum decisions as evidence of state-sponsored repression of journalists',
+    'Human Rights Watch and Amnesty International country reports on Venezuela are accepted as corroborating evidence in US immigration courts',
+    'If asylum is denied, TPS is a separate backup status that Carlos\'s attorney filed for simultaneously — not dependent on the asylum outcome'
+  ]},
+  choices:[
+    {txt:'The judge grants asylum. Carlos\'s political persecution claim is sustained.',cost:'',time:'',md:0,td:0,next:'oc_carlos_asylum'},
+    {txt:'Asylum is denied on a narrow procedural issue — but Venezuelan TPS is separately approved.',cost:'',time:'',md:0,td:0,next:'oc_carlos_tps'}
+  ]},
+
+carlos_irregular:{
+  loc:'US-Mexico Border — Nighttime Crossing',title:'Between the Ports',
+  body:`<p>You cross the desert between official ports of entry. A Border Patrol drone spots you within four hours. Agents arrive by vehicle. You are handcuffed and taken to a processing facility.</p>
+  <p>Because you crossed between ports without documentation, you are subject to <em>expedited removal</em> — a fast-track deportation that bypasses immigration court entirely. However, if you express a fear of return, you must by law be given a credible fear interview.</p>
+  <p>The officer asks: <em>"Do you have any fear of returning to your home country?"</em></p>`,
+  rc:{title:'Expedited Removal — The Most Critical Moment',facts:[
+    'Expedited removal (INA §235(b)) allows deportation without a court hearing — unless the person expresses fear of return',
+    'If fear is stated, a credible fear interview with an asylum officer is legally required before removal',
+    'Under 2025 policy expansions, expedited removal can apply to anyone apprehended within 100 miles of the border, present less than 2 years',
+    'Legal experts and advocates document cases of migrants removed under expedited removal without being properly screened — in violation of international non-refoulement obligations'
+  ]},
+  choices:[
+    {txt:'Tell the officer you fear returning to Venezuela. Request asylum — it is your legal right.',cost:'',time:'',md:0,td:0,next:'carlos_cf_venezuela'},
+    {txt:'Say nothing about fear. You are processed for expedited removal and deported within days.',cost:'Immediate removal',time:'72 hours',md:0,td:0,next:'oc_carlos_expedited'}
+  ]},
+
+carlos_darien:{
+  loc:'Necoclí, Colombia — Darién Staging Area',title:'The Jungle Route',
+  body:`<p>You fly to Bogotá and make your way to Necoclí on Colombia's Caribbean coast — the staging area for the Darién crossing. Thousands of migrants surround you: Venezuelans, Ecuadorians, Haitians, West Africans, all heading north. Locals sell supplies. Smuggler networks advertise openly.</p>
+  <p>The Darién Gap is 60 miles of roadless jungle between Colombia and Panama — rivers, mountains, dense canopy, and narco-trafficker territory. No roads. No cell service. The crossing takes 5–8 days on foot. In 2023, <strong>over 520,000 people made this crossing</strong>. Hundreds died.</p>`,
+  rc:{title:'The Darién Gap — Scale and Danger',facts:[
+    '520,085 people crossed the Darién Gap in 2023 — up from 9,000 in 2020; the increase tracks directly with the CHNV program\'s end and broader migration pressure',
+    'Venezuelan nationals are the largest single nationality making the crossing — they make up approximately 30–40% of all Darién crossers',
+    'At least 148 documented deaths in the Darién in 2023 — actual numbers are believed to be significantly higher',
+    'Armed groups in the Darién — including FARC dissidents and ELN — have been documented robbing, extorting, and attacking migrants'
+  ]},
+  choices:[
+    {txt:'Pay the $1,800 organized guide service — established routes, radio contact, emergency protocols.',cost:'-$1,800',time:'6–8 weeks total journey north',md:-1800,td:7,next:'carlos_darien_survived'},
+    {txt:'Cross with a larger informal group. Share costs ($400). More people, less professional guidance.',cost:'-$400 + higher risk',time:'7–10 weeks, more dangerous',md:-400,td:8,next:'carlos_darien_risky'}
+  ]},
+
+carlos_darien_risky:{
+  loc:'Darién Gap — Day 4',title:'Armed Men on the Trail',
+  body:`<p>Day 4. Your group rounds a bend and finds four armed men blocking the trail. They take phones, cash, and whatever looks valuable. You give them $300. A woman in your group is assaulted. One man goes missing at a river crossing — you wait two hours and then have to keep moving.</p>
+  <p>On Day 8, dehydrated and traumatized, you stumble into a Panamanian migration aid station. You are given water, food, and a 30-day transit permit. You continue north through Costa Rica, Nicaragua, Honduras, Guatemala, and Mexico. You arrive at Tijuana six weeks after leaving Necoclí.</p>`,
+  rc:{title:'Violence in the Darién',facts:[
+    'Robbery by armed groups is the most common crime in the Darién — migrants are targeted because they carry all their money on their person',
+    'Sexual violence against women and girls is a widespread and documented pattern in Darién crossings (UNHCR, Human Rights Watch)',
+    'Panama\'s Temporary Reception Stations (ERTs) provide basic aid and transit documents at exit points — migrants are not detained',
+    'Despite the violence, crossings continue because for many migrants, the threats at home are perceived as equal to or worse than the Darién risks'
+  ]},
+  choices:[
+    {txt:'Continue north — through five more countries to the US border.',cost:'~$600 buses and food',time:'+3 more weeks',md:-600,td:3,next:'carlos_darien_survived'}
+  ]},
+
+carlos_darien_survived:{
+  loc:'Tijuana, Mexico — US-Mexico Border',title:'At the Border — After Weeks of Travel',
+  body:`<p>You have crossed seven countries. You have spent $2,400 of your $4,500. You have seen things you cannot unsee. Your cousin in Miami is still waiting. You stand at the US border in Tijuana.</p>
+  <p>You open CBP One. Six-week wait for an appointment. You also see people in the hills to the east, moving at night between the fence posts. You have a decision to make.</p>`,
+  rc:{title:'Arriving at the US Border After the Darién',facts:[
+    'Most Darién crossers arrive at the US-Mexico border having spent 6–10 weeks and most of their money on the journey north',
+    'Presenting at a port of entry remains the legal right of any person — regardless of how they traveled to the border',
+    'US policy has alternated between processing Darién arrivals and deploying expedited removal, Title 42, and Remain in Mexico provisions that push migrants back',
+    'The international legal principle of non-refoulement prohibits returning anyone to a country where they face persecution — regardless of how they arrived at the border'
+  ]},
+  choices:[
+    {txt:'Get a CBP One appointment and present at the port of entry. Six more weeks, but legally protected.',cost:'~$350 shelter/food',time:'6 weeks',md:-350,td:6,next:'carlos_cf_venezuela'},
+    {txt:'Cross between ports at night. You have traveled 4,000 miles. You cannot risk a months-long wait.',cost:'Risk of expedited removal',time:'1–2 days',md:-100,td:1,next:'carlos_irregular'}
+  ]},
+
+/* ===== CARLOS OUTCOMES ===== */
+oc_carlos_asylum:{isOutcome:true,type:'legal',emoji:'📰',status:'Asylum Granted — Political Persecution',title:'Asylum Granted',
+  narrative:'The judge finds Carlos suffered persecution on account of his political opinion — his journalism was targeted because it documented government abuses. Asylum is granted. He receives a green card. He texts his cousin in Miami. He texts his former editor in Caracas, who replies with a single word: "Survived."',
+  context:'Political asylum was designed for exactly this situation — a journalist targeted by his government for documenting dissent. With documentation and legal representation, Carlos\'s case succeeded. But the system required him to wait 18 months, face a court alone or with a nonprofit attorney, and navigate a legal process most Americans couldn\'t complete in their own language.',
+  bigfact:'In FY2023, the US granted asylum to approximately 28,000 people — out of 3.6 million pending cases in immigration courts. Many valid cases are denied not because the fear is unreal but because applicants cannot adequately present their cases within a legal framework designed by and for attorneys.'},
+
+oc_carlos_tps:{isOutcome:true,type:'legal',emoji:'🛡️',status:'Temporary Protected Status',title:'Temporary Protected Status (TPS)',
+  narrative:'Carlos\'s asylum case is denied on a narrow technical ground — the judge finds insufficient direct evidence of targeted SEBIN surveillance. But his attorney\'s parallel TPS application is approved. Carlos can legally live and work in the US for the duration of Venezuela\'s TPS designation. He finds work at a Miami newspaper. But TPS is not a green card — and its future depends on who is in the White House.',
+  context:'Venezuela\'s TPS was first designated in March 2021. It provides work authorization and deportation protection but no path to permanent residence. It must be renewed periodically. The Trump administration attempted to end TPS for El Salvador, Haiti, Sudan, and Nicaragua in 2018–2019; courts blocked many of those terminations. Carlos\'s legal security is real but conditional.',
+  bigfact:'As of 2024, approximately 700,000 Venezuelans held TPS in the United States — more than any other nationality. TPS has existed since 1990 and currently covers nationals from 16 countries. It is the US immigration system\'s primary tool for protecting people from countries in crisis — but it was never designed as a permanent solution.'},
+
+oc_carlos_limbo:{isOutcome:true,type:'limbo',emoji:'⚖️',status:'Deportation Order — On Appeal',title:'Limbo — Deportation Order, Staying and Fighting',
+  narrative:'Carlos files an appeal with the Board of Immigration Appeals and applies for TPS. He stays. For two more years, he is in legal limbo — a deportation order on file, TPS pending, appeals grinding through an overwhelmed system. He works informally. He pays taxes with an ITIN. He cannot visit his family. He builds a life suspended between two legal realities.',
+  context:'A final deportation order does not mean immediate removal. Millions of people live in the US with removal orders for years — sometimes decades — caught between enforcement capacity and humanitarian concerns. Carlos is not undocumented in the simple sense. He is documented uncertainty — on paper and in the system, but with no legal future guaranteed.',
+  bigfact:'The US immigration court system has over 3.6 million pending cases as of 2024. The Board of Immigration Appeals has a backlog exceeding 60,000 appeals. An immigration case in some jurisdictions takes 7–10 years from first appearance to final determination — a lifespan, not a bureaucratic delay.'},
+
+oc_carlos_deported_order:{isOutcome:true,type:'deported',emoji:'🛫',status:'Voluntary Departure — Returned to Venezuela',title:'Returned to Venezuela',
+  narrative:'Carlos files for voluntary departure — not deportation. It is a legal distinction that matters: voluntary departure avoids the 10-year bar from US entry triggered by a formal removal order. He returns to Caracas. Nothing has changed. He contacts a Venezuelan journalist network based in Chile. The SEBIN agents\' vehicles are no longer outside his old building — because he no longer lives there.',
+  context:'Voluntary departure is strategically superior to deportation because it preserves the ability to apply for future visas. But the country Carlos returns to is the same one he fled. The US State Department\'s own Human Rights Reports on Venezuela document ongoing arbitrary detention, torture, and politically motivated imprisonment.',
+  bigfact:'The US State Department\'s Country Reports on Human Rights Practices — the official government source used in asylum cases — documents Venezuela as having "arbitrary or unlawful killings," "torture and cruel treatment," and "politically motivated imprisonment" by government security forces. Returning asylum seekers to these conditions is a documented source of harm.'},
+
+oc_carlos_undoc_border:{isOutcome:true,type:'undoc',emoji:'🌃',status:'Undocumented — Made It Across',title:'Undocumented — Crossed the Border',
+  narrative:'Carlos crosses and is not apprehended. He reaches Miami, his cousin\'s apartment, a job washing dishes, then line-cooking. He pays rent. He sends money to family in Caracas. He cannot travel internationally. He cannot get a professional license. He can\'t publish under his real name. He builds a life that is real in every way except the one that would let him be fully present in it.',
+  context:'Carlos is not a criminal by nature — he is a journalist for whom no legal pathway was accessible in the time available. His unauthorized crossing is a misdemeanor for a first offense. But the law cannot distinguish, at the moment of crossing, between a journalist fleeing government persecution and an economic migrant. Both cross the same desert at the same time.',
+  bigfact:'Studies of the undocumented population consistently find that a majority of unauthorized immigrants who crossed the border had legitimate fear of return — they are functionally asylum seekers who entered illegally because the legal queue was too slow, too full, or too uncertain to be survivable.'},
+
+oc_carlos_expedited:{isOutcome:true,type:'deported',emoji:'🚔',status:'Expedited Removal',title:'Expedited Removal — Returned in 72 Hours',
+  narrative:'Carlos says nothing. He is processed for expedited removal. Within 72 hours he is on a deportation flight to Caracas. He did not claim asylum — not because he didn\'t fear return, but because in that moment, exhausted and frightened, he did not know that saying "I am afraid to go home" would have legally changed everything.',
+  context:'Expedited removal is one of the most consequential failure points in US immigration enforcement. The law requires screening for asylum fears — but only if the migrant affirmatively states them. Many are removed without knowing their rights. The consequences of that single missed sentence can be permanent.',
+  bigfact:'UNHCR, Human Rights Watch, and the Government Accountability Office have all documented instances of migrants removed under expedited removal without being adequately screened for asylum claims — a violation of the international non-refoulement principle. The government disputes some findings; independent monitoring of CBP detention facilities remains severely restricted.'}
+
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let S = {char:null,node:null,money:0,weeks:0,log:[]};
+
+const $m = n => (n<0?'-$'+Math.abs(n).toLocaleString():'$'+n.toLocaleString());
+const $t = w => w===0?'—':w<4?w+'w':w<52?Math.round(w/4.3)+'mo':(w/52).toFixed(1)+'yr';
+
+// ============================================================
+// RENDER
+// ============================================================
+function show(id){['intro','game','outcome'].forEach(x=>{document.getElementById(x).style.display=x===id?'block':'none';});}
+
+function renderIntro(){
+  show('intro');
+  document.getElementById('intro').innerHTML=`
+    <div class="intro-masthead">
+      <div class="intro-flags">🇬🇹 🇮🇳 🇳🇬 🇻🇪</div>
+      <h1>The American Dream</h1>
+      <h2>An Immigration Decision Simulation</h2>
+      <div class="intro-rule"></div>
+      <div class="intro-lede">
+        <p>You are about to experience the real decisions, costs, wait times, and legal odds facing three very different people trying to build a life in America.</p>
+        <p>Every law, fee, and statistic in this simulation is real. Every outcome is documented. Some paths lead to legal status. Others lead to limbo, deportation, or life in the shadows — not because people chose wrongly, but because the system leaves few choices.</p>
+        <p><strong>Choose a character and navigate their journey.</strong></p>
+      </div>
+    </div>
+    <p class="char-select-label">— Choose Your Character —</p>
+    <div class="char-grid">${Object.values(CHARS).map(c=>`
+      <div class="char-card" style="--cc:${c.color}" onclick="begin('${c.id}')">
+        <div class="cc-flag">${c.flag}</div>
+        <div class="cc-name">${c.name}</div>
+        <div class="cc-meta">${c.age} YEARS OLD · ${c.country.toUpperCase()}</div>
+        <div class="cc-bg">${c.bg}</div>
+        <div class="cc-savings">
+          <span style="color:${c.color}">SAVINGS</span>
+          <div class="savings-track"><div class="savings-fill" style="width:${Math.min(100,c.money/120)}%"></div></div>
+          <span>${$m(c.money)}</span>
+        </div>
+      </div>`).join('')}</div>
+    <p class="intro-disclaimer">All immigration laws, fees, and statistics are sourced from USCIS, Pew Research Center, Migration Policy Institute, and Cato Institute data (2023–2025). This simulation is designed for educational use.</p>`;
+}
+
+function begin(id){
+  const c=CHARS[id];
+  S={char:id,node:c.start,money:c.money,weeks:0,log:[]};
+  renderGame();
+}
+
+function renderGame(){
+  const c=CHARS[S.char];
+  const n=NODES[S.node];
+  if(!n)return;
+  if(n.isOutcome){renderOutcome(n);return;}
+  show('game');
+  const sc=S.money<500?'su':S.money>5000?'sl':'sk';
+  document.getElementById('game').innerHTML=`
+    <button class="btn-back" onclick="renderIntro()">← Change Character</button>
+    <div class="game-topbar">
+      <div class="char-badge">
+        <div class="cb-flag">${c.flag}</div>
+        <div><div class="cb-name" style="color:${c.color}">${c.name}</div><div class="cb-country">${c.country.toUpperCase()}</div></div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-pill"><div class="sp-label">Savings</div><div class="sp-val m">${$m(S.money)}</div></div>
+        <div class="stat-pill"><div class="sp-label">Time Elapsed</div><div class="sp-val t">${$t(S.weeks)}</div></div>
+        <div class="stat-pill"><div class="sp-label">Status</div><div class="sp-val ${sc}">${S.money<0?'In Debt':'OK'}</div></div>
+      </div>
+    </div>
+    <div class="scene">
+      <div class="scene-loc" style="--cc:${c.color}">
+        <div class="loc-dot"></div>${n.loc}
+        <span class="scene-title">${n.title}</span>
+      </div>
+      <div class="scene-body">${n.body}</div>
+      ${n.rc?`<div class="rc-box"><div class="rc-head">${n.rc.title}</div><ul class="rc-facts">${n.rc.facts.map(f=>`<li>${f}</li>`).join('')}</ul></div>`:''}
+      <div class="choices-wrap" style="--cc:${c.color}">
+        <div class="choices-head">— What do you do? —</div>
+        <div class="choices-list">${n.choices.map((ch,i)=>`
+          <button class="choice-btn" onclick="pick(${i})">
+            <div class="choice-letter">${String.fromCharCode(65+i)}</div>
+            <div>${ch.txt}</div>
+            <div class="choice-tag">
+              ${ch.cost?`<div class="tag-cost">${ch.cost}</div>`:''}
+              ${ch.time?`<div class="tag-time">${ch.time}</div>`:''}
+            </div>
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>
+    ${S.log.length?`<div class="history-log"><div class="hl-head">Your path so far</div><div class="hl-list">${S.log.map(l=>`<div class="hl-item">${l}</div>`).join('')}</div></div>`:''}`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function pick(i){
+  const n=NODES[S.node];
+  const ch=n.choices[i];
+  if(ch.md)S.money+=ch.md;
+  if(ch.td)S.weeks+=ch.td*4;
+  S.log.push(`${n.title}: ${ch.txt.substring(0,65)}${ch.txt.length>65?'…':''}`);
+  S.node=ch.next;
+  renderGame();
+}
+
+function renderOutcome(n){
+  const c=CHARS[S.char];
+  show('outcome');
+  document.getElementById('outcome').innerHTML=`
+    <span class="oc-emoji">${n.emoji}</span>
+    <div class="oc-badge ${n.type}">${n.status}</div>
+    <h2 class="oc-title">${n.title}</h2>
+    <div class="oc-narrative"><p>${n.narrative}</p></div>
+    <div class="oc-stats">
+      <div class="oc-stat"><div class="lbl">FINAL SAVINGS</div><div class="val" style="color:${S.money<0?'#e57373':'#4caf50'}">${$m(S.money)}</div></div>
+      <div class="oc-stat"><div class="lbl">TIME ELAPSED</div><div class="val" style="color:#79c0ff">${S.weeks===0?'<1mo':$t(S.weeks)}</div></div>
+      <div class="oc-stat"><div class="lbl">LEGAL STATUS</div><div class="val" style="color:${n.type==='legal'?'#4caf50':n.type==='undoc'?'#e57373':n.type==='deported'?'#e57373':'#e8a020'}">${n.type==='legal'?'✓ Legal':n.type==='undoc'?'⚠ Undoc':n.type==='deported'?'✗ Removed':'◐ Limbo'}</div></div>
+    </div>
+    <div class="oc-context">
+      <h3>What This Means</h3>
+      <p>${n.context}</p>
+      <p class="oc-bigfact">${n.bigfact}</p>
+    </div>
+    <div>
+      <button class="btn-replay" onclick="begin('${c.id}')">Try Different Choices</button>
+      <button class="btn-newchar" onclick="renderIntro()">New Character</button>
+    </div>
+    <p class="oc-footer">All outcomes in this simulation reflect real documented immigrant experiences. Immigration law and statistics sourced from USCIS, Pew Research Center, Migration Policy Institute, Cato Institute, and TRAC Immigration (2023–2025).</p>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+renderIntro();
+</script>
+</body>
+</html>
